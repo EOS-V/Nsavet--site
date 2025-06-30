@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>NSAvet</title>
+  <meta name="viewport" content=device-width, initial-scale=1.0>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; color: #333; }
+    h1, h2 { color: #2e7d32; }
+    .section { background: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 0 5px #aaa; }
+    input, textarea, select, button {
+      width: 100%; padding: 8px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc;
+    }
+    button { background-color: #ff6d00; color: white; font-weight: bold; border: none; cursor: pointer; }
+    button:hover { background-color: #e65100; }
+    .item { background: #e8f5e9; padding: 10px; margin: 8px 0; border-left: 5px solid #2e7d32; border-radius: 5px; }
+    .delete { float: right; color: red; cursor: pointer; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>NSAvet 🐾</h1>
+
+  <div id="loginArea" class="section">
+    <h2>Login</h2>
+    <input type="text" id="loginUser" placeholder="Usuário">
+    <input type="password" id="loginPass" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div id="appArea" style="display:none">
+
+    <div class="section">
+      <h2>Cadastro de Pacientes</h2>
+      <input id="nomeAnimal" placeholder="Nome do animal">
+      <input id="sexoAnimal" placeholder="Sexo">
+      <input id="racaAnimal" placeholder="Raça">
+      <input id="idadeAnimal" placeholder="Idade">
+      <input id="pesoAnimal" placeholder="Peso">
+      <input id="especieAnimal" placeholder="Espécie">
+      <button onclick="salvar('pacientes')">Salvar Paciente</button>
+      <div id="pacientes"></div>
+    </div>
+
+    <div class="section">
+      <h2>Cadastro de Tutores</h2>
+      <input id="nomeTutor" placeholder="Nome do tutor">
+      <input id="contatoTutor" placeholder="Contato">
+      <button onclick="salvar('tutores')">Salvar Tutor</button>
+      <div id="tutores"></div>
+    </div>
+
+    <div class="section">
+      <h2>Receituário</h2>
+      <textarea id="receitaTexto" placeholder="Digite a receita completa..."></textarea>
+      <button onclick="salvar('receitas')">Salvar Receita</button>
+      <div id="receitas"></div>
+    </div>
+
+    <div class="section">
+      <h2>Encaminhamentos</h2>
+      <select id="tipoEncaminhamento">
+        <option>Exame veterinário</option>
+        <option>Especialista</option>
+      </select>
+      <textarea id="textoEncaminhamento" placeholder="Descreva o motivo do encaminhamento..."></textarea>
+      <button onclick="salvar('encaminhamentos')">Salvar Encaminhamento</button>
+      <div id="encaminhamentos"></div>
+    </div>
+
+    <div class="section">
+      <h2>Agenda de Consultas</h2>
+      <input type="datetime-local" id="dataConsulta">
+      <input id="descricaoConsulta" placeholder="Motivo da consulta">
+      <button onclick="salvar('consultas')">Agendar</button>
+      <div id="consultas"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const login = () => {
+      const u = document.getElementById('loginUser').value;
+      const p = document.getElementById('loginPass').value;
+      if (u === "VET1" && p === "NSA215") {
+        document.getElementById('loginArea').style.display = "none";
+        document.getElementById('appArea').style.display = "block";
+        mostrarTudo();
+      } else {
+        alert("Usuário ou senha incorretos.");
+      }
+    }
+
+    function salvar(tipo) {
+      let dados = {};
+      if (tipo === "pacientes") {
+        dados = {
+          nome: get("nomeAnimal"),
+          sexo: get("sexoAnimal"),
+          raca: get("racaAnimal"),
+          idade: get("idadeAnimal"),
+          peso: get("pesoAnimal"),
+          especie: get("especieAnimal")
+        };
+      } else if (tipo === "tutores") {
+        dados = {
+          nome: get("nomeTutor"),
+          contato: get("contatoTutor")
+        };
+      } else if (tipo === "receitas") {
+        dados = {
+          texto: get("receitaTexto"),
+          data: new Date().toLocaleString()
+        };
+      } else if (tipo === "encaminhamentos") {
+        dados = {
+          tipo: get("tipoEncaminhamento"),
+          texto: get("textoEncaminhamento"),
+          data: new Date().toLocaleString()
+        };
+      } else if (tipo === "consultas") {
+        dados = {
+          data: get("dataConsulta"),
+          descricao: get("descricaoConsulta")
+        };
+      }
+      const lista = JSON.parse(localStorage.getItem(tipo) || "[]");
+      lista.push(dados);
+      localStorage.setItem(tipo, JSON.stringify(lista));
+      mostrarTudo();
+    }
+
+    function excluir(tipo, i) {
+      const lista = JSON.parse(localStorage.getItem(tipo) || "[]");
+      lista.splice(i, 1);
+      localStorage.setItem(tipo, JSON.stringify(lista));
+      mostrarTudo();
+    }
+
+    function mostrarTudo() {
+      mostrarLista("pacientes", "pacientes", (p, i) => `<div class='item'>🐾 ${p.nome} (${p.sexo}, ${p.raca}, ${p.idade} anos, ${p.peso}kg, ${p.especie}) <span class='delete' onclick="excluir('pacientes', ${i})">🗑</span></div>`);
+      mostrarLista("tutores", "tutores", (t, i) => `<div class='item'>👤 ${t.nome} - ${t.contato} <span class='delete' onclick="excluir('tutores', ${i})">🗑</span></div>`);
+      mostrarLista("receitas", "receitas", (r, i) => `<div class='item'>💊 ${r.texto}<br><small>${r.data}</small> <span class='delete' onclick="excluir('receitas', ${i})">🗑</span></div>`);
+      mostrarLista("encaminhamentos", "encaminhamentos", (e, i) => `<div class='item'>📄 ${e.tipo}: ${e.texto}<br><small>${e.data}</small> <span class='delete' onclick="excluir('encaminhamentos', ${i})">🗑</span></div>`);
+      mostrarLista("consultas", "consultas", (c, i) => `<div class='item'>📅 ${c.descricao} em ${c.data} <span class='delete' onclick="excluir('consultas', ${i})">🗑</span></div>`);
+    }
+
+    function mostrarLista(chave, destinoId, formatter) {
+      const lista = JSON.parse(localStorage.getItem(chave) || "[]");
+      document.getElementById(destinoId).innerHTML = lista.map((item, i) => formatter(item, i)).join("");
+    }
+
+    const get = id => document.getElementById(id).value;
+  </script>
+</body>
+</html>
